@@ -21,13 +21,6 @@ for f in os.listdir(tests):
         if f[len(f) - len('.input'):] == '.input':
             fn = f[:len(f) - len('.input')]
             print fn,
-            
-            cmd = './master.py < ' + abs_f + \
-                      ' 2> ' + join(test_output, fn+'.err') + \
-                      ' > ' + join(test_output, fn+'.output')
-                      
-            print cmd
-            
             os.system('./master.py < ' + abs_f + \
                       ' 2> ' + join(test_output, fn+'.err') + \
                       ' > ' + join(test_output, fn+'.output'))

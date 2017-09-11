@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar target/lab0.jar $1 $2 $3
+bvs7/src/server.py $1 $2 $3
