@@ -1,5 +1,2 @@
 #!/bin/bash
-
-# Kill Java
-killall -9 process
-killall -9 java
+ps aux | grep server.py | awk '{print $2}' | xargs kill -9

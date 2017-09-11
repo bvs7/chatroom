@@ -3,8 +3,9 @@
 
 
 import sys
+import time
 from threading import Thread
-from socket import socket, SOCK_STREAM, AF_INET
+from socket import socket, SOCK_STREAM, AF_INET, error as socketError, SOL_SOCKET, SO_REUSEADDR
 
 HOST = "127.0.0.1"
 BASE_PORT = 25090
@@ -18,44 +19,6 @@ class ChatConnection:
 		self.inConn=False  #Listened and got incoming connection
 		self.outConn=False #Searched and got outgoing connection
 
-# Thread to open connections with any other servers
-class SearchThread(Thread):
-	def __inif__(self, cs):
-		self.cs = cs
-		
-		# Create sockets for all connections
-		for i in range(self.cs.n_servers):
-			if i == self.cs.my_id: continue
-			self.cs.chatConns[i].sendSock = socket(AF_INET, SOCK_STREAM)			
-		
-	def run(self):
-		while True:
-			for i in range(self.cs.n_servers):
-				chatConn = self.cs.chatConns[i]
-				if i == self.cs.my_id: continue
-				if not chatConn.outConn:
-					try:
-						chatConn.sendSock.connect((HOST, chatConn.id_ + BASE_PORT))
-					except socket.error:
-						continue
-					chatConn.outConn = True
-						
-# Thread to listen for connections from any servers
-class ListenThread(Thread):
-	def __init__(self, cs):
-		self.cs = cs
-		self.listen_socket = socket(AF_INET, SOCK_STREAM)
-		self.bind((HOST,self.cs.my_port))
-		self.listen(2)
-		
-	def run(self):
-		chatConns = self.cs.chatConns
-		while True:
-			(conn, addr) = s.accept()
-			other_id = int(addr[1]) - BASE_PORT
-			chatConns[other_id].recvConn = connect
-			chatConns[other_id].outConn = True
-
 class ChatroomServer:
 
 	def __init__(self, id_, n, port):
@@ -68,47 +31,120 @@ class ChatroomServer:
 		
 		self.chatConns = [None]*n
 		for i in range(n):
-			if i = self.my_id: continue
-			self.chatConns[i] = ChatConnection(BASE_PORT+i)
+			if i == self.my_id: continue
+			self.chatConns[i] = ChatConnection(i)
 			
 		# Create message Log
 		self.msgLog = []
 			
 		# Start Listening and Searching Threads
-		self.listenThread = ListenThread(self)
-		self.searchThread = SearchThread(self)
+		self.listenThread = Thread(target=self.listenThreadEntry)
+		self.searchThread = Thread(target=self.searchThreadEntry)
 		
 		self.listenThread.start()
 		self.searchThread.start()
 		
+		print "Master is port ", self.master_port
+		
 		# Accept master
 		self.master_sock = socket(AF_INET, SOCK_STREAM)
+		self.master_sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 		self.master_sock.bind( ("127.0.0.1", self.master_port) )
 		self.master_sock.listen(0)
 		(self.master_conn, self.master_addr) = self.master_sock.accept()
 		
-	def execMasterCmd(cmd):
+		self.serveMasterForever()
+		
+	def execMasterCmd(self,cmd):
 		if "get" in cmd:
-			resp = "messages " + msgLog.join(",")
-			self.master_conn.send(resp)
+			resp = "messages " + ",".join(self.msgLog)
+			self.master_conn.send(resp + "\n")
 		elif "alive" in cmd:
-			resp = "alive " + [str(c.id_) for c in self.chatConns if (not c == None and c.inConn and c.outConn].join(",")
-			self.master_conn.send(resp)
+			aliveList = []
+			for c in self.chatConns:
+				if c == None:
+					aliveList.append(str(self.my_id))
+				elif (c.inConn and c.outConn):
+					aliveList.append(str(c.id_))
+			resp = "alive " + ",".join(aliveList)
+			self.master_conn.send(resp + "\n")
+		elif "broadcast" in cmd:
+			msg = cmd.split(" ",1)[1]
+			self.msgLog.append(msg)
+			for i in range(self.n_servers):
+				if not i == self.my_id and self.chatConns[i].outConn:
+					self.chatConns[i].sendSock.send("msg " + msg + "\n")
 				
 	def serveMasterForever(self):
 		dataBuf = ""
 		while True:
 			recvData = self.master_conn.recv(1024)
 			if recvData == 0: # Connection was closed
+				self.master_conn.shutdown()
+				self.master_conn.close()
 				break
 			dataBuf += recvData
-			while "\n" in dataBuff:
-				(cmd, dataBuff) = dataBuff.split("\n",1)
+			while "\n" in dataBuf:
+				(cmd, dataBuf) = dataBuf.split("\n",1)
+				print "M", self.my_id, "got", cmd
 				self.execMasterCmd(cmd)
+				
+	def execOtherCmd(self,cmd,cc):
+		if "msg" in cmd:
+			self.msgLog.append(cmd.split(' ',1)[1])
 			
-		
 	
+	def serveOtherForever(self, chatConn_id):
+		chatConn = self.chatConns[chatConn_id]
+		dataBuf = ""
+		while True:
+			recvData = chatConn.recvConn.recv(1024)
+			if recvData == 0: # Connection was closed
+				chatConn.inConn = False
+				chatConn.outConn = False
+				break
+			dataBuf += recvData
+			while "\n" in dataBuf:
+				(cmd, dataBuf) = dataBuf.split("\n",1)
+				print self.my_id, "got", cmd
+				self.execOtherCmd(cmd,chatConn)
+				
+	def searchThreadEntry(self):
+		# Create sockets for all connections
+		for i in range(self.n_servers):
+			if i == self.my_id: continue
+			self.chatConns[i].sendSock = socket(AF_INET, SOCK_STREAM)
 
+		while True:
+			time.sleep(0.1)
+			for i in range(self.n_servers):
+				chatConn = self.chatConns[i]
+				if i == self.my_id: continue
+				if not chatConn.outConn:
+					try:
+						port = chatConn.id_ + BASE_PORT
+						chatConn.sendSock.connect((HOST, port))
+						chatConn.sendSock.send("id "+str(self.my_id))
+						chatConn.outConn = True
+					except socketError:
+						continue
+
+	def listenThreadEntry(self):
+		self.listen_socket = s = socket(AF_INET, SOCK_STREAM)
+		s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+		s.bind((HOST,self.my_port))
+		s.listen(2)
+		
+		chatConns = self.chatConns
+		while True:
+			time.sleep(0.1)
+			(conn, addr) = self.listen_socket.accept()
+			other_id = int(conn.recv(1024).split()[1])
+			chatConns[other_id].recvConn = conn
+			chatConns[other_id].inConn = True
+			handler = Thread(target=self.serveOtherForever, args=(other_id,))
+			handler.start()
+			self.listen_socket.listen(2)
 
 if __name__ == "__main__":
 	
