@@ -22,7 +22,7 @@ for f in os.listdir(tests):
             fn = f[:len(f) - len('.input')]
             print fn,
             
-            cmd = './master.py debug < ' + abs_f + \
+            cmd = './master.py < ' + abs_f + \
                       ' 2> ' + join(test_output, fn+'.err') + \
                       ' > ' + join(test_output, fn+'.output')
                       
