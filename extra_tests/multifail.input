@@ -1,0 +1,16 @@
+0 start 6 10100
+1 start 6 10101
+2 start 6 10102
+3 start 6 10103
+4 start 6 10104
+5 start 6 10105
+3 alive
+sleep 1000
+0 crash
+1 crash
+2 crash
+4 crash
+5 crash
+sleep 1000
+3 alive
+exit

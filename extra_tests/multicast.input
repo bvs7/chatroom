@@ -1,0 +1,48 @@
+0 start 10 10000
+1 start 10 10001
+2 start 10 10002
+3 start 10 10003
+4 start 10 10004
+5 start 10 10005
+6 start 10 10006
+7 start 10 10007
+8 start 10 10008
+9 start 10 10009
+0 broadcast msg0
+sleep 1000
+1 broadcast msg1
+sleep 1000
+2 broadcast msg2
+sleep 1000
+3 broadcast msg3
+sleep 1000
+4 broadcast msg4
+sleep 1000
+1 get
+2 get
+9 get
+5 broadcast msg5-0
+5 broadcast msg5-1
+5 broadcast msg5-2
+5 broadcast msg5-3
+5 broadcast msg5-4
+5 broadcast msg5-5
+5 broadcast msg5-6
+5 broadcast msg5-7
+5 broadcast msg5-8
+5 broadcast msg5-9
+sleep 1000
+6 get
+0 get
+6 broadcast msg6
+sleep 1000
+7 broadcast msg7
+sleep 1000
+8 broadcast msg8
+sleep 1000
+9 broadcast msg9
+sleep 1000
+8 get
+3 get
+0 get
+exit

@@ -1,0 +1,13 @@
+alive 0,1,2,3
+messages msg0
+messages msg1
+messages msg0,msg1
+alive 0,1,2
+alive 0,1,2,3
+messages 
+alive 0,1,2,3
+alive 0,1,2,3
+alive 0,1,2,3
+messages msg2
+messages msg0,msg1,msg2
+alive 0,1,2

@@ -1,0 +1,35 @@
+0 start 4 10000
+1 start 4 10001
+2 start 4 10002
+3 start 4 10003
+3 alive
+0 broadcast msg0
+sleep 1000
+3 get
+3 crash
+3 start 4 10003
+1 broadcast msg1
+sleep 1000
+3 get
+2 get
+3 crash
+0 alive
+3 start 4 10003
+3 alive
+3 get
+1 alive
+3 crash
+3 start 4 10003
+3 crash
+3 start 4 10003
+3 crash
+3 start 4 10003
+0 alive
+3 alive
+2 broadcast msg2
+sleep 1000
+3 get
+0 get
+3 crash
+0 alive
+exit

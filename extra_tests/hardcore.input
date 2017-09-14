@@ -1,0 +1,20 @@
+0 start 16 10000
+1 start 16 10001
+2 start 16 10002
+3 start 16 10003
+4 start 16 10004
+5 start 16 10005
+6 start 16 10006
+7 start 16 10007
+8 start 16 10008
+9 start 16 10009
+10 start 16 10010
+11 start 16 10011
+12 start 16 10012
+13 start 16 10013
+14 start 16 10014
+15 start 16 10015
+0 alive
+7 alive
+15 alive
+exit
